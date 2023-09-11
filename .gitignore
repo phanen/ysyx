@@ -32,7 +32,8 @@
 *.app
 
 # verilator
-obj_dir
+obj_dir/
+build/
 
 # bear
 compile_commands.json
