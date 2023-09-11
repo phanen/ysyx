@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+# verilator
+obj_dir
+
+# bear
+compile_commands.json
+.cache/
