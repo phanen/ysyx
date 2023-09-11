@@ -47,8 +47,9 @@ verilator --cc --exe --build -j 0 -Wall sim_main.cpp top.v
 - <https://verilator.org/guide/latest/faq.html?highlight=wave>
 
 `bash init.sh nemu` -> `make sim`
-> 必须先初始化 nemu..
-![img:nemu](https://i.imgur.com/l1puBw1.png)
+> 必须先初始化 nemu...
+![img: nemu](https://i.imgur.com/l1puBw1.png)
+
 ```make
 YSYX_HOME = $(NEMU_HOME)/..
 
@@ -93,7 +94,7 @@ endef
 ```sh
 ./build/Vtop && gtkwave ./build/wave.vcd
 ```
-![img:wave](https://i.imgur.com/vfoy7L9.png)
+![img: wave](https://i.imgur.com/vfoy7L9.png)
 
 ## 理解 verilator 的 RTL 仿真行为
 
@@ -152,8 +153,9 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop VL_NOT_FINAL : public VerilatedModel {
 
 ## NVBoard 模拟开发板
 > Nju Virual Board? 模拟虚拟的 FPGA
+- <https://github.com/NJU-ProjectN/nvboard>
 
-demo
+实例: 如何使用 nvboard
 ```
 ├── constr
 │   └── top.nxdc
@@ -201,4 +203,32 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 ```
 
-## 
+
+nvboard workflow
+- verilator 仿真得到的硬件信号将绑定到 nvboard 的引脚
+- nvboard 后端用 sdl 来仿真虚拟板子, 提供初始化/板子更新/引脚绑定等 api
+```cc
+void nvboard_bind_pin(void *signal, bool is_rt, bool is_output, int len, ...);
+```
+  - `is_rt` 为 `true` 时, 表示该信号为实时信号, 每个周期都要更新才能正确工作, 如键盘和 VGA 相关信号
+    `is_rt` 为 `false` 时, 表示该信号为普通信号, 可以在 NVBoard 更新画面时才更新, 从而提升 NVBoard 的性能, 如拨码开关和 LED 灯等, 无需每个周期都更新
+  - `is_output` 为 `true` 时, 表示该信号方向为输出方向(从 RTL 代码到 NVBoard); 否则为输入方向(从 NVBoard 到 RTL 代码)
+  - `len` 为信号的长度, 大于 1 时为向量信号
+  - 可变参数列表 `...` 为引脚编号列表, 编号为整数; 绑定向量信号时, 引脚编号列表从 MSB 到 LSB 排列
+- 引脚约束文件: `audo_bind.py` 直接解析 `.nxdc` 格式
+```sh
+python auto_pin_bind.py top.nxdc auto_bind.cpp
+# nvboard_bind_all_pins(dut)
+```
+
+nxdc 格式
+```
+top=top_name
+
+# Line comment inside nxdc
+signal pin
+signal (pin1, pin2, ..., pink)
+```
+- `signal pin` 表示将顶层模块的 `signal` 端口信号绑定到引脚 `pin` 上,
+- `signal (pin1, pin2, ..., pink)` 表示将顶层模块的 `signal` 信号的每一位从高到低依次绑定到 `pin1, pin2, ..., pink` 上
+
