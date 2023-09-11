@@ -13,10 +13,11 @@ int main(int argc, char *argv[]) {
   contextp->commandArgs(argc, argv);
   Vtop *top = new Vtop{contextp};
 
-  Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
-  top->trace(tfp, 99);   // Trace 99 levels of hierarchy (or see below)
-  tfp->dumpvars(1, "t"); // trace 1 level under "t"
+
+  Verilated::traceEverOn(true);
+  top->trace(tfp, 99); // Trace 99 levels of hierarchy (or see below)
+  // tfp->dumpvars(1, "t"); // trace 1 level under "t"
   tfp->open("./build/wave.vcd");
 
   size_t sim_time = 100;

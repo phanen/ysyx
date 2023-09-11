@@ -17,7 +17,7 @@ iverilog
 - <https://github.com/steveicarus/iverilog>
 - <https://bleyer.org/icarus>
 
-## example
+## verilator example
 
 <https://verilator.org/guide/latest/example_cc.html#example-c-execution>
 
@@ -59,7 +59,7 @@ define git_commit
 endef
 ```
 
-## 查看波形
+## gtkwave 波形
 - <https://verilator.org/guide/latest/faq.html?highlight=wave>
 - <https://zhuanlan.zhihu.com/p/618184203>
 
@@ -69,10 +69,11 @@ endef
   contextp->commandArgs(argc, argv);
   Vtop *top = new Vtop{contextp};
 
-  Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
-  top->trace(tfp, 99);   // Trace 99 levels of hierarchy (or see below)
-  tfp->dumpvars(1, "t"); // trace 1 level under "t"
+
+  Verilated::traceEverOn(true);
+  top->trace(tfp, 99); // Trace 99 levels of hierarchy (or see below)
+  // tfp->dumpvars(1, "t"); // trace 1 level under "t"
   tfp->open("./build/wave.vcd");
 
   size_t sim_time = 100;
@@ -82,14 +83,17 @@ endef
     top->a = a;
     top->b = b;
     top->eval();
-    printf("a = %d, b = %d, f = %d\n", a, b, top->f);
-    assert(top->f == (a ^ b));
 
     contextp->timeInc(1);
     tfp->dump(contextp->time());
   }
   tfp->close();
 ```
+
+```sh
+./build/Vtop && gtkwave ./build/wave.vcd
+```
+![img:wave](https://i.imgur.com/vfoy7L9.png)
 
 ## 理解 verilator 的 RTL 仿真行为
 
@@ -146,7 +150,55 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop VL_NOT_FINAL : public VerilatedModel {
 };
 ```
 
-## NVBoard
-> 虚拟 FPGA
+## NVBoard 模拟开发板
+> Nju Virual Board? 模拟虚拟的 FPGA
 
+demo
+```
+├── constr
+│   └── top.nxdc
+├── csrc
+│   └── main.cpp
+├── Makefile
+├── resource
+│   └── picture.hex
+└── vsrc
+    ├── led.v
+    ├── ps2_keyboard.v
+    ├── seg.v
+    ├── top.v
+    └── vga_ctrl.v
+```
 
+makefile
+```make
+VERILATOR_CFLAGS += -MMD --build -cc  \
+				-O3 --x-assign fast --x-initial fast --noassert
+
+# constraint file
+SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
+$(SRC_AUTO_BIND): $(NXDC_FILES)
+	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+
+# project source
+VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
+CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+CSRCS += $(SRC_AUTO_BIND)
+
+# rules for NVBoard
+include $(NVBOARD_HOME)/scripts/nvboard.mk
+
+# rules for verilator
+INCFLAGS = $(addprefix -I, $(INC_PATH))
+CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
+LDFLAGS += -lSDL2 -lSDL2_image
+
+$(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
+	@rm -rf $(OBJ_DIR)
+	$(VERILATOR) $(VERILATOR_CFLAGS) \
+		--top-module $(TOPNAME) $^ \
+		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
+		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
+```
+
+## 

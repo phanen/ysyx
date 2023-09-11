@@ -7,9 +7,6 @@
 # And finally, our.v which is our SystemVerilog design file.
 
 all:
-	bear -- verilator --cc --exe --build -j 0 -Wall --Mdir build sim_main.cpp top.v
-
-trace:
 	bear -- verilator --cc --exe --build --trace -j 0 -Wall --Mdir build sim_main.cpp top.v
 
 clean:
