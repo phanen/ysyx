@@ -152,8 +152,11 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop VL_NOT_FINAL : public VerilatedModel {
 ```
 
 ## NVBoard 模拟开发板
-> Nju Virual Board? 模拟虚拟的 FPGA
+> Nju Virual Board?
 - <https://github.com/NJU-ProjectN/nvboard>
+- c++ 模拟 clk 等输入信号 -> verilator 仿真硬件 eval
+- verilator 输出信号 -> 驱动虚拟 Board
+
 
 实例: 如何使用 nvboard
 ```
@@ -232,3 +235,32 @@ signal (pin1, pin2, ..., pink)
 - `signal pin` 表示将顶层模块的 `signal` 端口信号绑定到引脚 `pin` 上,
 - `signal (pin1, pin2, ..., pink)` 表示将顶层模块的 `signal` 信号的每一位从高到低依次绑定到 `pin1, pin2, ..., pink` 上
 
+## NVBoard 模拟双控开关
+
+```cc
+static void single_cycle() {
+  dut.a = rand() & 1;
+  dut.b = rand() & 1;
+  dut.eval();
+  sleep(1);
+}
+```
+
+```
+top=top
+
+a LD15
+b LD14
+f LD13
+```
+
+
+Q: 实际 FPGA 的 I/O 都会来自真实的硬件, 而 NVBoard 完全是虚拟的. 如果将 input 接入引脚的同时, 也模拟出输入信号, 会发生竞争么
+```
+top=top
+
+a SW1
+b SW2
+f LD3
+```
+nvboard 似乎要接入鼠标才能用 sw? 要接入键盘才能 kill 进程
