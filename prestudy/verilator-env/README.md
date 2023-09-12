@@ -263,4 +263,26 @@ a SW1
 b SW2
 f LD3
 ```
-nvboard 似乎要接入鼠标才能用 sw? 要接入键盘才能 kill 进程
+
+## 流水灯
+
+循环移位
+```verilog
+  always @(posedge clk) begin
+    if (rst) begin led <= 1; count <= 0; end
+    else begin
+      led <= {led[14:0], led[15]};
+      // if (count == 0) led <= {led[14:0], led[15]};
+      // count <= (count >= 5000000 ? 32'b0 : count + 1);
+    end
+  end
+```
+- 这种方式减慢频率, 实际仿真时间隔可能不够均匀
+- 另一种方式: 在 `single_cycle` 直接 `sleep`, 会导致键盘没法用来直接杀掉进程
+  - 但巧妙的是: `^C` 可以打断单个 `sleep`, 从而达到人为控制周期的效果
+
+
+## todo
+
+nvboard
+- [ ] sw 用鼠标拖似乎相当难用 (如果 `sleep` 直接处于失灵的状态)
