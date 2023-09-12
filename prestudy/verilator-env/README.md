@@ -4,6 +4,7 @@
 ## what is verilator
 - <https://www.veripool.org/verilator>
 - <https://verilator.org/guide/latest>
+- <https://www.itsembedded.com/>
 
 the fastest Verilog/SystemVerilog simulator
 - Verilog/SystemVerilog -> multithreaded C++/SystemC
@@ -282,7 +283,6 @@ f LD3
   - 但巧妙的是: `^C` 可以打断单个 `sleep`, 从而达到人为控制周期的效果
 
 
-## todo
+## 理解 verilator 的 RTL 仿真行为
 
-nvboard
-- [ ] sw 用鼠标拖似乎相当难用 (如果 `sleep` 直接处于失灵的状态)
+> 阅读 verilator 编译出的 C++代码, 然后结合 verilog 代码, 尝试理解仿真器是如何对时序逻辑电路进行仿真的
